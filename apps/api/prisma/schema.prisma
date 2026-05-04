@@ -1,0 +1,123 @@
+// PRISM-K backend Prisma schema
+// 5 tables per spec: User, ResponseSession, Result, SharedCard, MatchRecord
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TestVersion {
+  lite
+  full
+}
+
+enum MatchContext {
+  work
+  friend
+  love
+  family
+}
+
+enum CardFormat {
+  square
+  story
+  talk
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  results          Result[]
+  responseSessions ResponseSession[]
+
+  @@map("users")
+}
+
+model ResponseSession {
+  id          String      @id @default(cuid())
+  version     TestVersion
+  responses   Json
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  ipMasked    String?
+  userAgent   String?
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  result Result?
+
+  @@index([userId])
+  @@index([startedAt])
+  @@map("response_sessions")
+}
+
+model Result {
+  id            String      @id @default(cuid())
+  token         String      @unique
+  version       TestVersion
+  mainPattern   String
+  subPattern    String?
+  displayCode   String
+  matches       Json
+  facets        Json
+  dimensions    Json
+  auxiliary     Json
+  stressPatterns Json
+  quality       Json
+  riskSignals   Json
+  createdAt     DateTime    @default(now())
+  expiresAt     DateTime?
+
+  sessionId String           @unique
+  session   ResponseSession  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  matchesA MatchRecord[] @relation("matchTokenA")
+  matchesB MatchRecord[] @relation("matchTokenB")
+  cards    SharedCard[]
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("results")
+}
+
+model SharedCard {
+  id        String     @id @default(cuid())
+  resultId  String
+  result    Result     @relation(fields: [resultId], references: [id], onDelete: Cascade)
+  format    CardFormat
+  url       String?
+  createdAt DateTime   @default(now())
+
+  @@index([resultId])
+  @@map("shared_cards")
+}
+
+model MatchRecord {
+  id        String       @id @default(cuid())
+  tokenAId  String
+  tokenBId  String
+  context   MatchContext
+  outcome   Json
+  createdAt DateTime     @default(now())
+  expiresAt DateTime?
+
+  tokenA Result @relation("matchTokenA", fields: [tokenAId], references: [id], onDelete: Cascade)
+  tokenB Result @relation("matchTokenB", fields: [tokenBId], references: [id], onDelete: Cascade)
+
+  @@index([tokenAId])
+  @@index([tokenBId])
+  @@index([createdAt])
+  @@map("match_records")
+}
