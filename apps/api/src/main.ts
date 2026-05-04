@@ -4,6 +4,7 @@ import { NestFactory } from "@nestjs/core";
 import type { NestExpressApplication } from "@nestjs/platform-express";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { initSentry } from "./sentry";
 
 const DEFAULT_PORT = 4000;
 
@@ -14,6 +15,7 @@ function parseAllowedOrigins(): true | string[] {
 }
 
 async function bootstrap(): Promise<void> {
+  initSentry();
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: true,
   });
