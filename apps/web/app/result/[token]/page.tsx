@@ -221,7 +221,7 @@ export default async function ResultPage({ params }: { params: { token: string }
       <ResultHero result={result} />
       <RiskSignalBanner signals={result.riskSignals ?? []} />
       <SectionAccordion sections={sections} />
-      <ShareButtons token={result.token} />
+      <ShareButtons token={result.token} displayCode={result.code.display} />
       <p className="mx-auto mt-10 max-w-3xl px-4 pb-8 text-center text-xs text-slate-500">
         이는 현재의 패턴이며 자라납니다. 결과는 365일 후 자동 만료됩니다.
       </p>
