@@ -4,6 +4,7 @@ import { HealthController } from "./health/health.controller";
 import { ItemsModule } from "./items/items.module";
 import { PrismaModule } from "./prisma/prisma.module";
 import { ResponsesModule } from "./responses/responses.module";
+import { ResultsModule } from "./results/results.module";
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { ResponsesModule } from "./responses/responses.module";
     PrismaModule,
     ItemsModule,
     ResponsesModule,
+    ResultsModule,
   ],
   controllers: [HealthController],
   providers: [],
