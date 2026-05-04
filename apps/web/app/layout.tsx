@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
+import { CookieBanner } from "@/components/CookieBanner";
 import { EthicsFooter } from "@/components/EthicsFooter";
 import { KakaoSdk } from "@/components/KakaoSdk";
 import "./globals.css";
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: ReactNode }): JSX.E
       <body className="min-h-screen bg-white text-slate-900">
         <main className="min-h-[calc(100vh-7rem)]">{children}</main>
         <EthicsFooter />
+        <CookieBanner />
         <KakaoSdk appKey={process.env.NEXT_PUBLIC_KAKAO_KEY} />
       </body>
     </html>
