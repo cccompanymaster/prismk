@@ -18,6 +18,16 @@ importers:
         specifier: ^5.6.3
         version: 5.9.3
 
+  packages/types:
+    dependencies:
+      '@prism-k/data':
+        specifier: workspace:*
+        version: link:../data
+    devDependencies:
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
 packages:
 
   typescript@5.9.3:
