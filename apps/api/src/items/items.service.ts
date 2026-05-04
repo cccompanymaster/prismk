@@ -52,7 +52,7 @@ function shuffleAvoidingAdjacency(items: Item[]): Item[] {
       }
     }
 
-    const pickFacet = bestFacet ?? fallbackFacet;
+    const pickFacet: string | null = bestFacet ?? fallbackFacet;
     if (!pickFacet) break;
 
     const arr = buckets.get(pickFacet)!;
