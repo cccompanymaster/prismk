@@ -1,0 +1,27 @@
+{
+  "name": "@prism-k/data",
+  "version": "0.0.1",
+  "private": true,
+  "description": "PRISM-K 검사 콘텐츠 (items + patterns) 타입 정의 및 로더",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "data"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
