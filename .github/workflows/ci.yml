@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: 20
+  PNPM_VERSION: 9.12.0
+
+jobs:
+  install:
+    name: Install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+  typecheck:
+    name: Typecheck
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @prism-k/api exec prisma generate
+      - name: Build packages (data + types + scoring)
+        run: pnpm --filter @prism-k/data --filter @prism-k/types --filter @prism-k/scoring run build
+      - name: Typecheck all workspaces
+        run: pnpm -r run typecheck
+
+  test:
+    name: Test
+    needs: install
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @prism-k/api exec prisma generate
+      - name: Build packages (data + types + scoring)
+        run: pnpm --filter @prism-k/data --filter @prism-k/types --filter @prism-k/scoring run build
+      - name: Run unit tests
+        run: pnpm -r run test
+
+  build:
+    name: Build
+    needs: [typecheck, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Generate Prisma client
+        run: pnpm --filter @prism-k/api exec prisma generate
+      - name: Build packages
+        run: pnpm --filter @prism-k/data --filter @prism-k/types --filter @prism-k/scoring run build
+      - name: Build web
+        env:
+          NEXT_PUBLIC_API_BASE: http://localhost:4000/api
+          NEXT_PUBLIC_SITE_URL: http://localhost:3000
+        run: pnpm --filter @prism-k/web run build
+      - name: Build api
+        run: pnpm --filter @prism-k/api run build
