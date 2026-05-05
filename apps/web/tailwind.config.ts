@@ -9,7 +9,7 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Pretendard", "system-ui", "sans-serif"],
+        sans: ["var(--font-sans)", "Pretendard", "system-ui", "sans-serif"],
       },
       colors: {
         // 16 PRISM-K signature colors (one per pattern)

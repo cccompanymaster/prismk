@@ -1,9 +1,17 @@
 import type { Metadata, Viewport } from "next";
+import { Noto_Sans_KR } from "next/font/google";
 import type { ReactNode } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { EthicsFooter } from "@/components/EthicsFooter";
 import { KakaoSdk } from "@/components/KakaoSdk";
 import "./globals.css";
+
+const koreanFont = Noto_Sans_KR({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-sans",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -25,8 +33,13 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: ReactNode }): JSX.Element {
   return (
-    <html lang="ko">
-      <body className="min-h-screen bg-white text-slate-900">
+    <html lang="ko" className={koreanFont.variable}>
+      <head>
+        {process.env.NEXT_PUBLIC_API_BASE ? (
+          <link rel="preconnect" href={new URL(process.env.NEXT_PUBLIC_API_BASE).origin} />
+        ) : null}
+      </head>
+      <body className="min-h-screen bg-white font-sans text-slate-900">
         <main className="min-h-[calc(100vh-7rem)]">{children}</main>
         <EthicsFooter />
         <CookieBanner />
