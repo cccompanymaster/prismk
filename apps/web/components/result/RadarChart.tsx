@@ -1,3 +1,7 @@
+"use client";
+
+import { motion } from "framer-motion";
+
 interface DimDatum {
   dim: string;
   label: string;
@@ -50,7 +54,7 @@ export function RadarChart({ data, size = 320, color = "#7E57C2" }: Props): JSX.
             cy={cy}
             r={r}
             fill="none"
-            stroke="#e5e7eb"
+            stroke={t === 50 ? "#cbd5e1" : "#e5e7eb"}
             strokeDasharray={t === 50 ? "0" : "3 3"}
           />
         );
@@ -65,25 +69,49 @@ export function RadarChart({ data, size = 320, color = "#7E57C2" }: Props): JSX.
           stroke="#e5e7eb"
         />
       ))}
-      <polygon points={polygon} fill={color} fillOpacity={0.18} stroke={color} strokeWidth={2} />
-      {points.map((p) => (
-        <circle key={`pt-${p.datum.dim}`} cx={p.x} cy={p.y} r={4} fill={color} />
+      <motion.polygon
+        points={polygon}
+        fill={color}
+        fillOpacity={0.18}
+        stroke={color}
+        strokeWidth={2.5}
+        initial={{ opacity: 0, scale: 0.6 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
+      />
+      {points.map((p, i) => (
+        <motion.circle
+          key={`pt-${p.datum.dim}`}
+          cx={p.x}
+          cy={p.y}
+          r={4.5}
+          fill={color}
+          stroke="white"
+          strokeWidth={2}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.4 + i * 0.05 }}
+        />
       ))}
-      {points.map((p) => {
+      {points.map((p, i) => {
         const lx = cx + Math.cos(p.angle) * labelRadius;
         const ly = cy + Math.sin(p.angle) * labelRadius;
         return (
-          <text
+          <motion.text
             key={`lbl-${p.datum.dim}`}
             x={lx}
             y={ly}
             textAnchor="middle"
             dominantBaseline="central"
-            className="fill-slate-700 text-[11px]"
+            className="fill-slate-700 text-[11px] font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.5 + i * 0.05 }}
           >
             {p.datum.label}
             {p.datum.tScore !== null ? ` ${p.datum.tScore}` : ""}
-          </text>
+          </motion.text>
         );
       })}
     </svg>
