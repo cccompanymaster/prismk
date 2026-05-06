@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  Heart,
+  Lightbulb,
+  MessageCircle,
+  Quote,
+  Sparkles,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { findPattern, patterns, type PatternId } from "@prism-k/data";
+import { Card, CardBody } from "@/components/ui/Card";
+import { Container } from "@/components/ui/Container";
 
 export function generateStaticParams(): { id: PatternId }[] {
   return patterns.map((p) => ({ id: p.id }));
@@ -16,18 +28,29 @@ export function generateMetadata({ params }: { params: { id: string } }): Metada
   };
 }
 
-function Section({
-  title,
-  children,
-}: {
+interface SectionProps {
   title: string;
+  Icon: typeof Sparkles;
   children: React.ReactNode;
-}): JSX.Element {
+  accent: string;
+}
+
+function Section({ title, Icon, children, accent }: SectionProps): JSX.Element {
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-base font-semibold text-slate-900">{title}</h2>
-      <div className="mt-3 space-y-2 text-sm leading-relaxed text-slate-700">{children}</div>
-    </section>
+    <Card className="overflow-hidden">
+      <CardBody className="p-7">
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${accent}1a`, color: accent }}
+          >
+            <Icon className="h-5 w-5" />
+          </div>
+          <h2 className="text-base font-semibold text-slate-900">{title}</h2>
+        </div>
+        <div className="mt-4 space-y-2 text-sm leading-relaxed text-slate-700">{children}</div>
+      </CardBody>
+    </Card>
   );
 }
 
@@ -35,72 +58,118 @@ export default function PatternDetailPage({ params }: { params: { id: string } }
   const p = findPattern(params.id);
   if (!p) notFound();
 
+  const accent = p.signature.color;
+
   return (
     <article>
+      {/* Hero */}
       <header
-        className="text-white"
+        className="relative overflow-hidden text-white"
         style={{
-          background: `linear-gradient(135deg, ${p.signature.color}, ${p.signature.color}aa)`,
+          background: `linear-gradient(135deg, ${accent}, ${accent}88)`,
         }}
       >
-        <div className="mx-auto max-w-3xl px-4 py-14 text-center">
-          <p className="text-sm uppercase tracking-wide opacity-80">{p.signature.word}</p>
-          <h1 className="mt-2 text-5xl font-extrabold">{p.id}</h1>
-          <p className="mt-3 text-2xl font-semibold">{p.name}</p>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-30"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20% 50%, rgba(255,255,255,0.4), transparent 40%)",
+          }}
+          aria-hidden
+        />
+        <Container size="md" className="relative py-16 text-center">
+          <Link
+            href="/patterns"
+            className="inline-flex items-center gap-1 text-xs font-medium text-white/70 hover:text-white"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> 패턴 사전
+          </Link>
+          <p className="mt-6 text-xs uppercase tracking-[0.3em] opacity-80">
+            {p.signature.word}
+          </p>
+          <h1 className="mt-3 text-7xl font-black tracking-tight sm:text-8xl">{p.id}</h1>
+          <p className="mt-3 text-2xl font-semibold sm:text-3xl">{p.name}</p>
           <p className="mt-4 text-base opacity-90">“{p.slogan}”</p>
-          <p className="mt-2 text-xs opacity-70">시그니처 동물 · {p.signature.animal}</p>
-        </div>
+          <div className="mt-6 inline-flex items-center gap-3 rounded-full bg-white/10 px-4 py-1.5 text-xs backdrop-blur">
+            <span>{p.dimensionalKey}</span>
+            <span className="opacity-50">·</span>
+            <span>시그니처 동물 — {p.signature.animal}</span>
+          </div>
+        </Container>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-12">
-        <Section title="이 패턴은 이런 모습이에요">
+      <Container size="md" className="space-y-5 py-12">
+        <Section title="이 패턴은 이런 모습이에요" Icon={Sparkles} accent={accent}>
           {p.description.map((para, idx) => (
             <p key={idx}>{para}</p>
           ))}
         </Section>
 
-        <Section title={`사례 · ${p.story.persona}`}>
-          <p>{p.story.scene}</p>
+        <Section title={`사례 — ${p.story.persona}`} Icon={Quote} accent={accent}>
+          <p className="italic text-slate-600">{p.story.scene}</p>
         </Section>
 
-        <Section title="강점 영역">
-          <ul className="list-disc space-y-1 pl-5">
-            {p.strengths.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </Section>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Section title="강점 영역" Icon={TrendingUp} accent={accent}>
+            <ul className="space-y-1.5">
+              {p.strengths.map((s) => (
+                <li key={s} className="flex items-start gap-2">
+                  <span
+                    className="mt-1.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                    style={{ backgroundColor: accent }}
+                  />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+          <Section title="유의할 영역" Icon={Target} accent={accent}>
+            <ul className="space-y-1.5">
+              {p.watchOuts.map((s) => (
+                <li key={s} className="flex items-start gap-2">
+                  <span className="mt-1.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-300" />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        </div>
 
-        <Section title="유의할 영역">
-          <ul className="list-disc space-y-1 pl-5">
-            {p.watchOuts.map((s) => (
-              <li key={s}>{s}</li>
-            ))}
-          </ul>
-        </Section>
-
-        <Section title="잘 어울리는 환경">
+        <Section title="잘 어울리는 환경" Icon={Heart} accent={accent}>
           <p>{p.fitsWith}</p>
         </Section>
 
-        <Section title="자주 듣는 말">
-          <ul className="list-disc space-y-1 pl-5">
+        <Section title="자주 듣는 말" Icon={MessageCircle} accent={accent}>
+          <ul className="space-y-1.5">
             {p.oftenHeard.map((s) => (
-              <li key={s}>{s}</li>
+              <li key={s} className="text-slate-600">
+                {s}
+              </li>
             ))}
           </ul>
         </Section>
 
-        <Section title="다시 바라보기">
-          <p>{p.reframe}</p>
+        <Section title="다시 바라보기" Icon={Lightbulb} accent={accent}>
+          <p
+            className="rounded-lg p-4 italic"
+            style={{
+              backgroundColor: `${accent}0d`,
+              borderLeft: `3px solid ${accent}`,
+            }}
+          >
+            {p.reframe}
+          </p>
         </Section>
 
-        <p className="text-center">
-          <Link href="/patterns" className="text-sm text-slate-500 hover:text-slate-700">
-            ← 16 패턴 사전으로 돌아가기
+        <p className="pt-4 text-center">
+          <Link
+            href="/patterns"
+            className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+          >
+            <ArrowLeft className="h-4 w-4" /> 16 패턴 사전으로 돌아가기
           </Link>
         </p>
-      </div>
+      </Container>
     </article>
   );
 }
