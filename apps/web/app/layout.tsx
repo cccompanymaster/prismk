@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { EthicsFooter } from "@/components/EthicsFooter";
 import { KakaoSdk } from "@/components/KakaoSdk";
+import { SiteHeader } from "@/components/SiteHeader";
 import "./globals.css";
 
 const koreanFont = Noto_Sans_KR({
@@ -40,7 +41,8 @@ export default function RootLayout({ children }: { children: ReactNode }): JSX.E
         ) : null}
       </head>
       <body className="min-h-screen bg-white font-sans text-slate-900">
-        <main className="min-h-[calc(100vh-7rem)]">{children}</main>
+        <SiteHeader />
+        <main className="min-h-[calc(100vh-10rem)]">{children}</main>
         <EthicsFooter />
         <CookieBanner />
         <KakaoSdk appKey={process.env.NEXT_PUBLIC_KAKAO_KEY} />

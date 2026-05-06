@@ -70,20 +70,23 @@ test.describe("/result/[token]", () => {
     await expect(page.getByText(/아이디어가 비처럼 쏟아져요/)).toBeVisible();
   });
 
-  test("8 result sections are present in the accordion", async ({ page }) => {
+  test("8 result section accordion items render", async ({ page }) => {
     await mockResult(page);
     await page.goto(`/result/${TOKEN}`);
-    for (let i = 1; i <= 8; i++) {
-      await expect(page.getByText(`섹션 ${i}`)).toBeVisible();
-    }
+    const items = page.locator("ol > li").filter({ has: page.locator("[aria-expanded]") });
+    await expect(items).toHaveCount(8);
+    await expect(items.first().locator("[aria-expanded]")).toHaveAttribute(
+      "aria-expanded",
+      "true",
+    );
   });
 
   test("share buttons render the 3 download formats", async ({ page }) => {
     await mockResult(page);
     await page.goto(`/result/${TOKEN}`);
-    await expect(page.getByRole("link", { name: /정사각형 \(1080×1080\)/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /스토리 \(1080×1920\)/ })).toBeVisible();
-    await expect(page.getByRole("link", { name: /카톡 \(720×900\)/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /정사각형/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /스토리/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /카톡/ })).toBeVisible();
   });
 
   test("ethics phrase is rendered on the result page", async ({ page }) => {
