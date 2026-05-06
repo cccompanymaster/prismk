@@ -1,3 +1,11 @@
+"use client";
+
+import { AnimatePresence, motion } from "framer-motion";
+import { Plus } from "lucide-react";
+import { useState } from "react";
+import { Container } from "@/components/ui/Container";
+import { cn } from "@/lib/cn";
+
 interface QA {
   q: string;
   a: string;
@@ -23,19 +31,58 @@ const FAQ: QA[] = [
 ];
 
 export function FaqSection(): JSX.Element {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
   return (
-    <section className="border-t border-slate-100 bg-white py-16">
-      <div className="mx-auto max-w-3xl px-4">
-        <h2 className="text-center text-2xl font-bold text-slate-900">자주 묻는 질문</h2>
-        <dl className="mt-8 space-y-5">
-          {FAQ.map((qa) => (
-            <div key={qa.q} className="rounded-xl border border-slate-200 bg-white p-5">
-              <dt className="text-sm font-semibold text-slate-900">{qa.q}</dt>
-              <dd className="mt-2 text-sm leading-relaxed text-slate-600">{qa.a}</dd>
-            </div>
-          ))}
-        </dl>
-      </div>
+    <section className="border-t border-slate-100 bg-white py-20">
+      <Container size="md">
+        <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
+          자주 묻는 질문
+        </h2>
+        <ul className="mt-10 space-y-3">
+          {FAQ.map((qa, idx) => {
+            const open = idx === openIdx;
+            return (
+              <li
+                key={qa.q}
+                className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft"
+              >
+                <button
+                  type="button"
+                  onClick={() => setOpenIdx(open ? null : idx)}
+                  className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
+                  aria-expanded={open}
+                >
+                  <span className="text-sm font-semibold text-slate-900">{qa.q}</span>
+                  <Plus
+                    className={cn(
+                      "h-4 w-4 flex-shrink-0 text-slate-400 transition-transform",
+                      open && "rotate-45 text-pattern-DI",
+                    )}
+                    strokeWidth={2.5}
+                  />
+                </button>
+                <AnimatePresence initial={false}>
+                  {open ? (
+                    <motion.div
+                      key="content"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
+                      className="overflow-hidden"
+                    >
+                      <p className="border-t border-slate-100 px-5 pb-5 pt-4 text-sm leading-relaxed text-slate-600">
+                        {qa.a}
+                      </p>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </li>
+            );
+          })}
+        </ul>
+      </Container>
     </section>
   );
 }

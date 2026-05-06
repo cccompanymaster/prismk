@@ -1,6 +1,7 @@
 import { Differentiators } from "@/components/landing/Differentiators";
 import { FaqSection } from "@/components/landing/FaqSection";
 import { HeroSection } from "@/components/landing/HeroSection";
+import { PatternPreview } from "@/components/landing/PatternPreview";
 import { VersionCards } from "@/components/landing/VersionCards";
 
 export default function HomePage(): JSX.Element {
@@ -8,6 +9,7 @@ export default function HomePage(): JSX.Element {
     <>
       <HeroSection />
       <Differentiators />
+      <PatternPreview />
       <VersionCards />
       <FaqSection />
     </>
