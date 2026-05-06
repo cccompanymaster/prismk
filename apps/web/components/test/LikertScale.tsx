@@ -1,5 +1,8 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { cn } from "@/lib/cn";
+
 const LABELS: { value: 1 | 2 | 3 | 4 | 5 | 6; label: string }[] = [
   { value: 1, label: "전혀\n그렇지 않다" },
   { value: 2, label: "그렇지\n않다" },
@@ -21,21 +24,25 @@ export function LikertScale({ itemId, value, onChange }: Props): JSX.Element {
       {LABELS.map(({ value: v, label }) => {
         const selected = value === v;
         return (
-          <button
+          <motion.button
             key={v}
             type="button"
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(v)}
-            className={`flex h-16 flex-col items-center justify-center rounded-lg border-2 px-1 text-[11px] leading-tight transition ${
+            whileTap={{ scale: 0.92 }}
+            className={cn(
+              "flex h-16 flex-col items-center justify-center rounded-xl border-2 px-1 text-[11px] leading-tight transition-colors duration-150",
               selected
-                ? "border-pattern-DI bg-pattern-DI text-white shadow"
-                : "border-slate-200 bg-white text-slate-600 hover:border-slate-400"
-            }`}
+                ? "border-pattern-DI bg-pattern-DI text-white shadow-soft"
+                : "border-slate-200 bg-white text-slate-600 hover:border-pattern-DI/40 hover:bg-pattern-DI/5",
+            )}
           >
-            <span className="text-base font-bold">{v}</span>
-            <span className="mt-0.5 whitespace-pre-line text-center">{label}</span>
-          </button>
+            <span className={cn("text-base font-bold", !selected && "text-slate-700")}>{v}</span>
+            <span className="mt-0.5 whitespace-pre-line text-center text-[10px] opacity-90">
+              {label}
+            </span>
+          </motion.button>
         );
       })}
     </div>

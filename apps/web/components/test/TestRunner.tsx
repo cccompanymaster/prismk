@@ -1,9 +1,13 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Item } from "@prism-k/data";
 import type { TestVersion } from "@prism-k/types";
+import { Button } from "@/components/ui/Button";
+import { Container } from "@/components/ui/Container";
 import { fetchItems, submitResponses } from "@/lib/api";
 import { LikertScale } from "@/components/test/LikertScale";
 
@@ -174,95 +178,119 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-16 text-center">
+      <Container size="sm" className="py-16 text-center">
         <h2 className="text-xl font-semibold text-red-600">문제가 발생했어요</h2>
         <p className="mt-2 text-sm text-slate-600">{error}</p>
-      </div>
+      </Container>
     );
   }
 
   if (!items) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-24 text-center text-sm text-slate-500">
-        문항을 불러오고 있어요…
-      </div>
+      <Container size="sm" className="flex flex-col items-center py-24 text-sm text-slate-500">
+        <Loader2 className="h-6 w-6 animate-spin text-pattern-DI" />
+        <p className="mt-3">문항을 불러오고 있어요…</p>
+      </Container>
     );
   }
 
   const progress = items.length === 0 ? 0 : Math.round((answeredTotal / items.length) * 100);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-10">
-      <header className="space-y-3">
-        <div className="flex items-center justify-between text-xs text-slate-500">
-          <span>
+    <Container size="sm" className="py-10">
+      <header className="sticky top-0 z-10 -mx-4 mb-1 space-y-3 bg-white/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+        <div className="flex items-center justify-between text-xs">
+          <span className="font-medium text-slate-700">
             {pageIndex + 1} / {totalPages}
           </span>
-          <span>
+          <span className="text-slate-500">
             {answeredTotal} / {items.length} 응답
           </span>
         </div>
-        <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-          <div
-            className="h-full rounded-full bg-pattern-DI transition-all"
-            style={{ width: `${progress}%` }}
+        <div className="relative h-1.5 overflow-hidden rounded-full bg-slate-100">
+          <motion.div
+            className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-pattern-DI to-pattern-SS"
+            initial={false}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             aria-hidden
           />
         </div>
-        <p className="text-xs text-slate-500">
+        <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
+          <Sparkles className="h-3 w-3 text-pattern-DI" />
           1 (전혀 그렇지 않다) ~ 6 (매우 그렇다) 중 가장 가까운 것을 선택해 주세요.
         </p>
       </header>
 
-      <ol className="mt-8 space-y-7">
-        {currentItems.map((item, idx) => (
-          <li key={item.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-base font-medium leading-relaxed text-slate-900">
-              <span className="mr-2 text-sm font-semibold text-pattern-DI">
-                Q{pageIndex * pageSize + idx + 1}.
-              </span>
-              {item.text}
-            </p>
-            <div className="mt-4">
-              <LikertScale
-                itemId={item.id}
-                value={answers[item.id] ?? null}
-                onChange={(v) => handleAnswer(item.id, v)}
-              />
-            </div>
-          </li>
-        ))}
-      </ol>
+      <AnimatePresence mode="wait">
+        <motion.ol
+          key={pageIndex}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] as const }}
+          className="mt-6 space-y-5"
+        >
+          {currentItems.map((item, idx) => (
+            <li
+              key={item.id}
+              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-soft"
+            >
+              <p className="text-base font-medium leading-relaxed text-slate-900">
+                <span className="mr-2 inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-pattern-DI/10 px-1.5 text-xs font-semibold text-pattern-DI">
+                  Q{pageIndex * pageSize + idx + 1}
+                </span>
+                {item.text}
+              </p>
+              <div className="mt-4">
+                <LikertScale
+                  itemId={item.id}
+                  value={answers[item.id] ?? null}
+                  onChange={(v) => handleAnswer(item.id, v)}
+                />
+              </div>
+            </li>
+          ))}
+        </motion.ol>
+      </AnimatePresence>
 
       <nav className="mt-10 flex items-center justify-between">
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="md"
           onClick={handlePrev}
           disabled={pageIndex === 0}
-          className="rounded-lg border border-slate-200 px-5 py-2 text-sm text-slate-700 disabled:cursor-not-allowed disabled:opacity-40"
         >
-          이전
-        </button>
+          <ArrowLeft className="h-4 w-4" /> 이전
+        </Button>
         {isLast ? (
-          <button
-            type="button"
+          <Button
+            variant="accent"
+            size="lg"
             onClick={handleSubmit}
             disabled={!answeredOnPage || submitting}
-            className="rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {submitting ? "결과 분석 중…" : "결과 보기"}
-          </button>
+            {submitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> 결과 분석 중…
+              </>
+            ) : (
+              <>
+                결과 보기 <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
         ) : (
-          <button
-            type="button"
+          <Button
+            variant="primary"
+            size="md"
             onClick={handleNext}
             disabled={!answeredOnPage}
-            className="rounded-lg bg-pattern-DI px-6 py-2.5 text-sm font-semibold text-white shadow disabled:cursor-not-allowed disabled:opacity-40"
           >
-            다음
-          </button>
+            다음 <ArrowRight className="h-4 w-4" />
+          </Button>
         )}
       </nav>
-    </div>
+    </Container>
   );
 }
