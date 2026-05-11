@@ -34,8 +34,20 @@ async function bootstrap(): Promise<void> {
       transform: true,
     }),
   );
+  // Enables onModuleDestroy lifecycle on Prisma + other providers so SIGTERM /
+  // SIGINT trigger a graceful disconnect before the process exits. Required
+  // for clean rollouts on ECS / Cloudflare / k8s.
+  app.enableShutdownHooks();
   const port = Number(process.env.PORT) || DEFAULT_PORT;
   await app.listen(port);
+
+  const stop = async (signal: string): Promise<void> => {
+    console.log(`[api] ${signal} received — closing gracefully`);
+    await app.close();
+    process.exit(0);
+  };
+  process.on("SIGTERM", () => void stop("SIGTERM"));
+  process.on("SIGINT", () => void stop("SIGINT"));
 }
 
 void bootstrap();
