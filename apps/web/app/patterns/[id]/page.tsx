@@ -11,7 +11,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { findPattern, patterns, type PatternId } from "@prism-k/data";
+import { findPattern, patterns, relationships, type PatternId } from "@prism-k/data";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 
@@ -163,6 +163,36 @@ export default function PatternDetailPage({ params }: { params: { id: string } }
             {p.reframe}
           </p>
         </Section>
+
+        {(() => {
+          const fixtures = relationships.filter((r) => r.pair.includes(p.id));
+          if (fixtures.length === 0) return null;
+          return (
+            <Section title="관계 매트릭스 사례" Icon={MessageCircle} accent={accent}>
+              <ul className="space-y-3">
+                {fixtures.map((r) => (
+                  <li
+                    key={r.pair}
+                    className="rounded-lg border border-slate-100 bg-slate-50/50 p-3"
+                  >
+                    <p className="text-sm font-semibold text-slate-900">
+                      {r.pairKor}{" "}
+                      <span className="text-xs font-normal text-slate-500">· {r.context}</span>
+                    </p>
+                    <p className="mt-1.5 text-xs text-slate-600">{r.advice}</p>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-slate-500">
+                자세한 매칭 분석은{" "}
+                <Link href="/match" className="underline">
+                  매칭 페이지
+                </Link>
+                에서 두 사람의 토큰으로 함께 확인할 수 있어요.
+              </p>
+            </Section>
+          );
+        })()}
 
         <nav className="grid gap-3 pt-6 sm:grid-cols-2">
           {prev ? (
