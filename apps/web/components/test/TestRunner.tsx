@@ -158,6 +158,39 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
     }
   }, [pageIndex]);
 
+  // Keyboard shortcuts: 1-6 to answer the next unanswered item on the page,
+  // ArrowLeft/Right to navigate between pages.
+  useEffect(() => {
+    if (!items) return;
+    const handler = (e: KeyboardEvent): void => {
+      // Ignore if user is typing in an input/textarea or holding a modifier.
+      const target = e.target as HTMLElement | null;
+      if (target && ["INPUT", "TEXTAREA"].includes(target.tagName)) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      if (e.key === "ArrowRight" && answeredOnPage && !isLast) {
+        e.preventDefault();
+        handleNext();
+        return;
+      }
+      if (e.key === "ArrowLeft" && pageIndex > 0) {
+        e.preventDefault();
+        handlePrev();
+        return;
+      }
+      if (/^[1-6]$/.test(e.key)) {
+        const value = Number(e.key) as 1 | 2 | 3 | 4 | 5 | 6;
+        const next = currentItems.find((it) => answers[it.id] === undefined);
+        if (next) {
+          e.preventDefault();
+          setAnswers((prev) => ({ ...prev, [next.id]: value }));
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [items, answers, currentItems, answeredOnPage, isLast, pageIndex, handleNext, handlePrev]);
+
   const handleSubmit = useCallback(async () => {
     if (!items) return;
     setSubmitting(true);
@@ -199,6 +232,11 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
   }
 
   const progress = items.length === 0 ? 0 : Math.round((answeredTotal / items.length) * 100);
+  const remainingItems = items.length - answeredTotal;
+  const elapsedMs = Date.now() - startedAtRef.current;
+  const msPerItem = answeredTotal > 0 ? elapsedMs / answeredTotal : version === "lite" ? 10_000 : 9_500;
+  const minutesRemaining =
+    remainingItems > 0 ? Math.max(1, Math.round((remainingItems * msPerItem) / 60_000)) : null;
 
   return (
     <Container size="sm" className="py-10">
@@ -228,10 +266,26 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
             aria-hidden
           />
         </div>
-        <p className="flex items-center gap-1.5 text-[11px] text-slate-500">
-          <Sparkles className="h-3 w-3 text-pattern-DI" />
-          1 (전혀 그렇지 않다) ~ 6 (매우 그렇다) 중 가장 가까운 것을 선택해 주세요.
-        </p>
+        <div className="flex flex-col gap-1 text-[11px] text-slate-500 sm:flex-row sm:items-center sm:justify-between">
+          <p className="flex items-center gap-1.5">
+            <Sparkles className="h-3 w-3 text-pattern-DI" />
+            1 (전혀 그렇지 않다) ~ 6 (매우 그렇다) 중 가장 가까운 것을 선택해 주세요.
+          </p>
+          <p className="flex items-center gap-3 text-slate-400">
+            {minutesRemaining !== null ? (
+              <span className="inline-flex items-center gap-1">
+                약 {minutesRemaining}분 남음
+              </span>
+            ) : null}
+            <span className="hidden sm:inline-flex items-center gap-1">
+              <kbd className="rounded border border-slate-200 bg-white px-1 text-[10px] font-medium text-slate-600">1-6</kbd>
+              응답 ·
+              <kbd className="rounded border border-slate-200 bg-white px-1 text-[10px] font-medium text-slate-600">←</kbd>
+              <kbd className="rounded border border-slate-200 bg-white px-1 text-[10px] font-medium text-slate-600">→</kbd>
+              이동
+            </span>
+          </p>
+        </div>
       </header>
 
       <AnimatePresence mode="wait">
