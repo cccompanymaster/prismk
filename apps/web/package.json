@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@prism-k/data": "workspace:*",
+    "@prism-k/scoring": "workspace:*",
     "@prism-k/types": "workspace:*",
     "@sentry/nextjs": "^8.47.0",
     "class-variance-authority": "^0.7.1",

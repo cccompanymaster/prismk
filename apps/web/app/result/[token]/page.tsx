@@ -1,6 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { dimensions as DIMENSIONS_META, findPattern, resultReportSections } from "@prism-k/data";
+import {
+  dimensions as DIMENSIONS_META,
+  findPattern,
+  relationships,
+  resultReportSections,
+} from "@prism-k/data";
+import {
+  interpretCareerFit,
+  interpretDimension,
+  interpretGrowth,
+  interpretRelationshipHint,
+  interpretStrengths,
+  interpretStress,
+} from "@prism-k/scoring";
 import { fetchResult, type ResultDto } from "@/lib/api";
 import { AuxiliaryNotes } from "@/components/result/AuxiliaryNotes";
 import { QualityBanner } from "@/components/result/QualityBanner";
@@ -104,17 +117,30 @@ function buildSections(result: ResultDto): SectionEntry[] {
     {
       ...(resultReportSections[2] ?? { id: 3, title: "차원별 깊이 해석", description: "" }),
       body: (
-        <ul className="space-y-3">
+        <ul className="space-y-5">
           {DIM_CODES.map((code) => {
             const row = dims.find((d) => d.dim === code);
-            const t = row?.tScore;
+            const narrative = row
+              ? interpretDimension(code, {
+                  dim: code,
+                  raw: row.raw,
+                  standardized: row.standardized,
+                  tScore: row.tScore,
+                  ci: row.ci,
+                })
+              : null;
             return (
-              <li key={code} className="flex items-baseline justify-between gap-3">
-                <span className="font-medium text-slate-900">{dimensionLabel(code)}</span>
-                <span className="text-slate-500">
-                  T = {t ?? "—"}
-                  {row?.ci ? ` (${row.ci.low}~${row.ci.high})` : ""}
-                </span>
+              <li key={code} className="rounded-xl border border-slate-100 bg-white p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-slate-900">{dimensionLabel(code)}</span>
+                  <span className="text-xs text-slate-500">
+                    T = {row?.tScore ?? "—"}
+                    {row?.ci ? ` (${row.ci.low}~${row.ci.high})` : ""}
+                  </span>
+                </div>
+                {narrative ? (
+                  <p className="mt-2 text-sm leading-relaxed text-slate-700">{narrative}</p>
+                ) : null}
               </li>
             );
           })}
@@ -126,17 +152,28 @@ function buildSections(result: ResultDto): SectionEntry[] {
       body: (
         <div className="space-y-4">
           {main ? (
-            <div>
-              <p className="text-sm font-semibold text-slate-900">메인: {main.name}</p>
-              <p className="mt-1 text-sm">
+            <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">메인</p>
+              <p className="mt-1 text-base font-semibold text-slate-900">
+                {main.name} <span className="text-slate-400">· {main.id}</span>
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">
                 {findPattern(main.id)?.description?.[0] ?? main.slogan}
               </p>
+              {findPattern(main.id)?.description?.[1] ? (
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                  {findPattern(main.id)!.description[1]}
+                </p>
+              ) : null}
             </div>
           ) : null}
           {sub ? (
-            <div>
-              <p className="text-sm font-semibold text-slate-900">서브: {sub.name}</p>
-              <p className="mt-1 text-sm">
+            <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">서브</p>
+              <p className="mt-1 text-base font-semibold text-slate-900">
+                {sub.name} <span className="text-slate-400">· {sub.id}</span>
+              </p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">
                 {findPattern(sub.id)?.description?.[0] ?? sub.slogan}
               </p>
             </div>
@@ -149,67 +186,125 @@ function buildSections(result: ResultDto): SectionEntry[] {
     },
     {
       ...(resultReportSections[4] ?? { id: 5, title: "강점 영역", description: "" }),
-      body: (
-        <ul className="space-y-2">
-          {sortedHigh.slice(0, 3).map((f) => (
-            <li key={f.facet} className="flex items-baseline justify-between">
-              <span className="font-medium text-slate-900">{f.facet}</span>
-              <span className="text-slate-500">T = {f.tScore}</span>
-            </li>
-          ))}
-          {sortedHigh.length === 0 ? (
-            <li className="text-slate-500">표시할 강점 영역이 없습니다.</li>
-          ) : null}
-        </ul>
-      ),
+      body: (() => {
+        const items = interpretStrengths(facets as never);
+        if (items.length === 0) {
+          return <p className="text-slate-500">표시할 두드러진 강점 영역이 없습니다.</p>;
+        }
+        return (
+          <ul className="space-y-3">
+            {items.map((c) => (
+              <li key={c.facet} className="rounded-xl border border-slate-100 bg-white p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-slate-900">{c.facet}</span>
+                  <span className="text-xs text-slate-500">T = {c.tScore}</span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        );
+      })(),
     },
     {
       ...(resultReportSections[5] ?? { id: 6, title: "성장 영역", description: "" }),
-      body: (
-        <ul className="space-y-2">
-          {sortedLow.slice(0, 3).map((f) => (
-            <li key={f.facet} className="flex items-baseline justify-between">
-              <span className="font-medium text-slate-900">{f.facet}</span>
-              <span className="text-slate-500">T = {f.tScore}</span>
-            </li>
-          ))}
-          {sortedLow.length === 0 ? (
-            <li className="text-slate-500">표시할 성장 영역이 없습니다.</li>
-          ) : null}
-        </ul>
-      ),
+      body: (() => {
+        const auxG = (result.auxiliary as { code: "V" | "G"; raw: number | null }[]).find(
+          (a) => a.code === "G",
+        );
+        const items = interpretGrowth(facets as never, auxG?.raw ?? null);
+        if (items.length === 0) {
+          return <p className="text-slate-500">두드러진 발달 영역이 관찰되지 않습니다.</p>;
+        }
+        return (
+          <ul className="space-y-3">
+            {items.map((c) => (
+              <li key={c.facet} className="rounded-xl border border-slate-100 bg-white p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-slate-900">{c.facet}</span>
+                  <span className="text-xs text-slate-500">T = {c.tScore}</span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">{c.body}</p>
+              </li>
+            ))}
+          </ul>
+        );
+      })(),
     },
     {
       ...(resultReportSections[6] ?? { id: 7, title: "스트레스 시 모습", description: "" }),
-      body: (
-        <ul className="space-y-2">
-          {(result.stressPatterns as { code: string; raw: number | null; dominant: boolean }[])
-            .filter((s) => s.dominant)
-            .map((s) => (
-              <li key={s.code} className="flex items-baseline justify-between">
-                <span className="font-medium text-slate-900">{s.code}</span>
-                <span className="text-slate-500">우세 (raw {s.raw?.toFixed(2)})</span>
+      body: (() => {
+        const items = interpretStress(
+          (result.stressPatterns as {
+            code: "S1" | "S2" | "S3" | "S4" | "S5";
+            raw: number | null;
+            dominant: boolean;
+          }[]) ?? [],
+        );
+        if (items.length === 0) {
+          return (
+            <p className="text-slate-500">
+              두드러진 스트레스 반응 패턴이 관찰되지 않습니다. 평소의 회복 방식이 큰 변동 없이 잘
+              작동하고 있다는 신호일 수 있어요.
+            </p>
+          );
+        }
+        return (
+          <ul className="space-y-3">
+            {items.map((c) => (
+              <li key={c.code} className="rounded-xl border border-slate-100 bg-white p-4">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-slate-900">
+                    {c.code} · {c.label}
+                  </span>
+                  <span className="text-xs text-slate-500">우세</span>
+                </div>
+                <p className="mt-2 text-sm leading-relaxed text-slate-700">{c.recovery}</p>
               </li>
             ))}
-          {(result.stressPatterns as { dominant: boolean }[]).every((s) => !s.dominant) ? (
-            <li className="text-slate-500">두드러진 스트레스 반응 패턴이 관찰되지 않습니다.</li>
-          ) : null}
-        </ul>
-      ),
+          </ul>
+        );
+      })(),
     },
     {
       ...(resultReportSections[7] ?? { id: 8, title: "관계와 진로 시사점", description: "" }),
-      body: (
-        <div className="space-y-3">
-          {main ? <p>{findPattern(main.id)?.fitsWith}</p> : null}
-          <p className="text-xs text-slate-500">
-            관계 분석은 매칭 페이지(/match)에서 두 사람의 결과 토큰으로 함께 확인할 수 있습니다.
-          </p>
-          <p className="text-xs text-slate-500">
-            본 결과는 채용·인사·결혼 결정에 단독 사용되지 않습니다.
-          </p>
-        </div>
-      ),
+      body: (() => {
+        const mainPattern = main ? findPattern(main.id) : undefined;
+        const subPattern = sub ? findPattern(sub.id) : null;
+        if (!mainPattern) return <p>메인 패턴을 확인할 수 없습니다.</p>;
+        const careerText = interpretCareerFit(mainPattern, subPattern ?? null);
+        const hint = interpretRelationshipHint(mainPattern, relationships);
+        return (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-slate-100 bg-white p-4">
+              <p className="text-xs uppercase tracking-wide text-slate-500">진로 적합성</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">{careerText}</p>
+            </div>
+            {hint.pairs.length > 0 ? (
+              <div className="rounded-xl border border-slate-100 bg-white p-4">
+                <p className="text-xs uppercase tracking-wide text-slate-500">관계 양상 힌트</p>
+                <ul className="mt-2 space-y-2 text-sm leading-relaxed text-slate-700">
+                  {hint.pairs.map((p) => (
+                    <li key={p.id}>
+                      <span className="font-semibold text-slate-900">
+                        {mainPattern.id} × {p.id} ({p.name})
+                      </span>
+                      <span className="block mt-0.5 text-slate-600">{p.advice}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-slate-500">
+                  자세한 매칭 분석은 <a href="/match" className="underline">매칭 페이지</a>에서 두
+                  사람의 토큰으로 함께 확인할 수 있어요.
+                </p>
+              </div>
+            ) : null}
+            <p className="text-xs text-slate-500">
+              본 결과는 채용·인사·결혼 결정에 단독 사용되지 않습니다.
+            </p>
+          </div>
+        );
+      })(),
     },
   ];
 }

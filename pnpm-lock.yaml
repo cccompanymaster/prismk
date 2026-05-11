@@ -87,6 +87,9 @@ importers:
       '@prism-k/data':
         specifier: workspace:*
         version: link:../../packages/data
+      '@prism-k/scoring':
+        specifier: workspace:*
+        version: link:../../packages/scoring
       '@prism-k/types':
         specifier: workspace:*
         version: link:../../packages/types
