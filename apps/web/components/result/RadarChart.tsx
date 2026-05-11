@@ -33,17 +33,35 @@ export function RadarChart({ data, size = 320, color = "#7E57C2" }: Props): JSX.
   const points = data.map((d, i) => {
     const angle = (i / data.length) * 2 * Math.PI - Math.PI / 2;
     const radius = d.tScore === null ? 0 : tScoreToRadius(d.tScore, maxRadius);
-    return { x: cx + Math.cos(angle) * radius, y: cy + Math.sin(angle) * radius, angle, datum: d };
+    const lowRadius =
+      d.ci?.low !== undefined && d.ci.low !== null ? tScoreToRadius(d.ci.low, maxRadius) : radius;
+    const highRadius =
+      d.ci?.high !== undefined && d.ci.high !== null
+        ? tScoreToRadius(d.ci.high, maxRadius)
+        : radius;
+    return {
+      x: cx + Math.cos(angle) * radius,
+      y: cy + Math.sin(angle) * radius,
+      xLow: cx + Math.cos(angle) * lowRadius,
+      yLow: cy + Math.sin(angle) * lowRadius,
+      xHigh: cx + Math.cos(angle) * highRadius,
+      yHigh: cy + Math.sin(angle) * highRadius,
+      angle,
+      datum: d,
+    };
   });
 
   const polygon = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ");
+  const polygonHigh = points.map((p) => `${p.xHigh.toFixed(1)},${p.yHigh.toFixed(1)}`).join(" ");
+  const polygonLow = points.map((p) => `${p.xLow.toFixed(1)},${p.yLow.toFixed(1)}`).join(" ");
+  const hasCI = data.some((d) => d.ci);
 
   return (
     <svg
       viewBox={`0 0 ${size} ${size}`}
       className="mx-auto block"
       role="img"
-      aria-label="6 차원 T-점수 레이더 차트"
+      aria-label="6 차원 T-점수 레이더 차트 (신뢰구간 음영 포함)"
     >
       {RING_T_SCORES.map((t) => {
         const r = tScoreToRadius(t, maxRadius);
@@ -69,6 +87,28 @@ export function RadarChart({ data, size = 320, color = "#7E57C2" }: Props): JSX.
           stroke="#e5e7eb"
         />
       ))}
+      {hasCI ? (
+        <motion.polygon
+          points={polygonHigh}
+          fill={color}
+          fillOpacity={0.08}
+          stroke="none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+        />
+      ) : null}
+      {hasCI ? (
+        <motion.polygon
+          points={polygonLow}
+          fill="white"
+          fillOpacity={1}
+          stroke="none"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.15 }}
+        />
+      ) : null}
       <motion.polygon
         points={polygon}
         fill={color}

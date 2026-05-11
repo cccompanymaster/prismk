@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { dimensions as DIMENSIONS_META, findPattern, resultReportSections } from "@prism-k/data";
 import { fetchResult, type ResultDto } from "@/lib/api";
+import { AuxiliaryNotes } from "@/components/result/AuxiliaryNotes";
+import { QualityBanner } from "@/components/result/QualityBanner";
 import { RadarChart } from "@/components/result/RadarChart";
 import { ResultHero } from "@/components/result/ResultHero";
 import { RiskSignalBanner } from "@/components/result/RiskSignalBanner";
@@ -74,7 +76,7 @@ function buildSections(result: ResultDto): SectionEntry[] {
     {
       ...(resultReportSections[1] ?? { id: 2, title: "한눈에 보는 프로파일", description: "" }),
       body: (
-        <div>
+        <div className="space-y-5">
           <RadarChart
             data={DIM_CODES.map((code) => {
               const row = dims.find((d) => d.dim === code);
@@ -87,9 +89,15 @@ function buildSections(result: ResultDto): SectionEntry[] {
             })}
             color={main?.signature.color ?? "#7E57C2"}
           />
-          <p className="mt-4 text-xs text-slate-500">
-            T-점수 평균 50, SD 10 기준. 50을 중심으로 표준화된 위치를 보여드립니다.
+          <p className="text-xs text-slate-500">
+            T-점수 평균 50, SD 10 기준. 옅은 음영은 신뢰구간을, 진한 도형은 추정 위치를 의미합니다.
           </p>
+          <AuxiliaryNotes
+            auxiliary={(result.auxiliary as { code: "V" | "G"; raw: number | null }[]) ?? []}
+            stressPatterns={
+              (result.stressPatterns as { code: string; raw: number | null; dominant: boolean }[]) ?? []
+            }
+          />
         </div>
       ),
     },
@@ -216,14 +224,41 @@ export default async function ResultPage({ params }: { params: { token: string }
 
   const sections = buildSections(result);
 
+  const daysRemaining = result.expiresAt
+    ? Math.max(
+        0,
+        Math.ceil((new Date(result.expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)),
+      )
+    : null;
+
   return (
     <>
       <ResultHero result={result} />
+      <QualityBanner
+        quality={
+          (result.quality as {
+            missing: "normal" | "warn" | "fail";
+            variance: "normal" | "warn" | "fail";
+            speed: "normal" | "warn" | "fail";
+            extreme: "normal" | "warn" | "fail";
+          }) ?? {
+            missing: "normal",
+            variance: "normal",
+            speed: "normal",
+            extreme: "normal",
+          }
+        }
+      />
       <RiskSignalBanner signals={result.riskSignals ?? []} />
       <SectionAccordion sections={sections} />
       <ShareButtons token={result.token} displayCode={result.code.display} />
       <p className="mx-auto mt-10 max-w-3xl px-4 pb-8 text-center text-xs text-slate-500">
-        이는 현재의 패턴이며 자라납니다. 결과는 365일 후 자동 만료됩니다.
+        이는 현재의 패턴이며 자라납니다.
+        {daysRemaining !== null ? (
+          <span className="ml-1">
+            결과는 약 {daysRemaining}일 후 자동 만료됩니다.
+          </span>
+        ) : null}
       </p>
     </>
   );
