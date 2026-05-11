@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Item } from "@prism-k/data";
@@ -69,6 +69,7 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
   const [pageIndex, setPageIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const startedAtRef = useRef<number>(Date.now());
 
   // Initial load: try draft first, otherwise fetch fresh items.
@@ -108,6 +109,9 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
       startedAt: startedAtRef.current,
       expiresAt: Date.now() + DRAFT_TTL_MS,
     });
+    if (Object.keys(answers).length > 0) {
+      setSavedAt(Date.now());
+    }
   }, [items, answers, pageIndex, version]);
 
   // Warn before unload if there are answers in flight.
@@ -198,14 +202,22 @@ export function TestRunner({ version }: { version: TestVersion }): JSX.Element {
 
   return (
     <Container size="sm" className="py-10">
-      <header className="sticky top-0 z-10 -mx-4 mb-1 space-y-3 bg-white/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <header className="sticky top-14 z-10 -mx-4 mb-1 space-y-3 bg-white/80 px-4 py-3 backdrop-blur sm:-mx-6 sm:px-6">
         <div className="flex items-center justify-between text-xs">
           <span className="font-medium text-slate-700">
             {pageIndex + 1} / {totalPages}
           </span>
-          <span className="text-slate-500">
-            {answeredTotal} / {items.length} 응답
-          </span>
+          <div className="flex items-center gap-3">
+            {savedAt ? (
+              <span className="inline-flex items-center gap-1 text-[11px] text-emerald-600">
+                <Check className="h-3 w-3" strokeWidth={3} />
+                자동 저장됨
+              </span>
+            ) : null}
+            <span className="text-slate-500">
+              {answeredTotal} / {items.length} 응답
+            </span>
+          </div>
         </div>
         <div className="relative h-1.5 overflow-hidden rounded-full bg-slate-100">
           <motion.div

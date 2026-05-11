@@ -59,6 +59,9 @@ export default function PatternDetailPage({ params }: { params: { id: string } }
   if (!p) notFound();
 
   const accent = p.signature.color;
+  const idx = patterns.findIndex((x) => x.id === p.id);
+  const prev = idx > 0 ? patterns[idx - 1] : patterns[patterns.length - 1];
+  const next = idx >= 0 && idx < patterns.length - 1 ? patterns[idx + 1] : patterns[0];
 
   return (
     <article>
@@ -160,6 +163,47 @@ export default function PatternDetailPage({ params }: { params: { id: string } }
             {p.reframe}
           </p>
         </Section>
+
+        <nav className="grid gap-3 pt-6 sm:grid-cols-2">
+          {prev ? (
+            <Link
+              href={`/patterns/${prev.id}`}
+              className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:shadow-soft"
+            >
+              <ArrowLeft className="h-4 w-4 flex-shrink-0 text-slate-400 group-hover:-translate-x-0.5" />
+              <span className="flex-1">
+                <span className="block text-[11px] uppercase tracking-wide text-slate-500">
+                  이전 패턴
+                </span>
+                <span
+                  className="mt-0.5 block text-sm font-semibold"
+                  style={{ color: prev.signature.color }}
+                >
+                  {prev.id} · {prev.name}
+                </span>
+              </span>
+            </Link>
+          ) : null}
+          {next ? (
+            <Link
+              href={`/patterns/${next.id}`}
+              className="group flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 text-right transition hover:border-slate-300 hover:shadow-soft sm:order-last"
+            >
+              <span className="flex-1">
+                <span className="block text-[11px] uppercase tracking-wide text-slate-500">
+                  다음 패턴
+                </span>
+                <span
+                  className="mt-0.5 block text-sm font-semibold"
+                  style={{ color: next.signature.color }}
+                >
+                  {next.id} · {next.name}
+                </span>
+              </span>
+              <ArrowLeft className="h-4 w-4 flex-shrink-0 rotate-180 text-slate-400 group-hover:translate-x-0.5" />
+            </Link>
+          ) : null}
+        </nav>
 
         <p className="pt-4 text-center">
           <Link

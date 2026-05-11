@@ -1,8 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Heart, Loader2, Search, Users } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Heart, Loader2, Search, Share2, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
@@ -18,13 +19,28 @@ const CONTEXTS = [
 
 type ContextKey = (typeof CONTEXTS)[number]["key"];
 
+function isContextKey(value: string | null): value is ContextKey {
+  return value === "work" || value === "friend" || value === "love" || value === "family";
+}
+
 export function MatchForm(): JSX.Element {
+  const searchParams = useSearchParams();
   const [tokenA, setTokenA] = useState("");
   const [tokenB, setTokenB] = useState("");
   const [context, setContext] = useState<ContextKey>("work");
   const [loading, setLoading] = useState(false);
   const [outcome, setOutcome] = useState<MatchOutcomeDto | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    const a = searchParams.get("a");
+    const b = searchParams.get("b");
+    const c = searchParams.get("context");
+    if (a) setTokenA(a);
+    if (b) setTokenB(b);
+    if (isContextKey(c)) setContext(c);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
@@ -38,6 +54,21 @@ export function MatchForm(): JSX.Element {
       setError(err instanceof Error ? err.message : "매칭 분석에 실패했습니다.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleShareLink = async (): Promise<void> => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    url.searchParams.set("a", tokenA);
+    url.searchParams.set("b", tokenB);
+    url.searchParams.set("context", context);
+    try {
+      await navigator.clipboard.writeText(url.toString());
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
     }
   };
 
@@ -130,7 +161,13 @@ export function MatchForm(): JSX.Element {
         <p className="mt-6 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{error}</p>
       ) : null}
 
-      {outcome ? <MatchResult outcome={outcome} /> : null}
+      {outcome ? (
+        <MatchResult
+          outcome={outcome}
+          onShareLink={handleShareLink}
+          copied={copied}
+        />
+      ) : null}
 
       <p className="mt-12 flex items-center justify-center gap-1.5 text-center text-xs text-slate-500">
         <Heart className="h-3.5 w-3.5" />
@@ -149,7 +186,15 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function MatchResult({ outcome }: { outcome: MatchOutcomeDto }): JSX.Element {
+function MatchResult({
+  outcome,
+  onShareLink,
+  copied,
+}: {
+  outcome: MatchOutcomeDto;
+  onShareLink: () => void;
+  copied: boolean;
+}): JSX.Element {
   return (
     <motion.article
       initial={{ opacity: 0, y: 16 }}
@@ -174,12 +219,19 @@ function MatchResult({ outcome }: { outcome: MatchOutcomeDto }): JSX.Element {
       <ResultCard label="자주 부딪히는 영역" body={outcome.conflict} icon="⚡" />
       <ResultCard label="서로 채워주는 영역" body={outcome.complement} icon="✨" />
       <ResultCard label="함께 잘 살기 위한 한 가지" body={outcome.advice} icon="🌱" />
-      <p className="pt-1 text-center text-xs text-slate-500">
-        결과는 90일 후 자동으로 만료됩니다.{" "}
-        <a href="/match" className="text-slate-400 hover:text-slate-600">
-          새 분석 시작 <ArrowRight className="inline h-3 w-3" />
+      <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+        <Button variant="outline" size="sm" onClick={onShareLink}>
+          <Share2 className="h-3.5 w-3.5" />
+          {copied ? "링크 복사됨" : "이 분석 공유 링크 복사"}
+        </Button>
+        <a
+          href="/match"
+          className="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700"
+        >
+          새 분석 시작 <ArrowRight className="h-3.5 w-3.5" />
         </a>
-      </p>
+      </div>
+      <p className="pt-1 text-center text-xs text-slate-500">결과는 90일 후 자동으로 만료됩니다.</p>
     </motion.article>
   );
 }
