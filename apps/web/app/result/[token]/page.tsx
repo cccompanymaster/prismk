@@ -13,6 +13,7 @@ import {
   interpretRelationshipHint,
   interpretStrengths,
   interpretStress,
+  tToPercentile,
 } from "@prism-k/scoring";
 import { fetchResult, type ResultDto } from "@/lib/api";
 import { AuxiliaryNotes } from "@/components/result/AuxiliaryNotes";
@@ -22,6 +23,7 @@ import { ResultHero } from "@/components/result/ResultHero";
 import { RiskSignalBanner } from "@/components/result/RiskSignalBanner";
 import { SectionAccordion, type SectionEntry } from "@/components/result/SectionAccordion";
 import { ShareButtons } from "@/components/result/ShareButtons";
+import { SpectrumBar } from "@/components/result/SpectrumBar";
 
 export const dynamic = "force-dynamic";
 
@@ -89,7 +91,7 @@ function buildSections(result: ResultDto): SectionEntry[] {
     {
       ...(resultReportSections[1] ?? { id: 2, title: "한눈에 보는 프로파일", description: "" }),
       body: (
-        <div className="space-y-5">
+        <div className="space-y-6">
           <RadarChart
             data={DIM_CODES.map((code) => {
               const row = dims.find((d) => d.dim === code);
@@ -102,8 +104,27 @@ function buildSections(result: ResultDto): SectionEntry[] {
             })}
             color={main?.signature.color ?? "#7E57C2"}
           />
+          <div className="space-y-4 rounded-xl border border-slate-100 bg-white p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              차원별 위치 (백분위)
+            </p>
+            {DIM_CODES.map((code) => {
+              const row = dims.find((d) => d.dim === code);
+              return (
+                <SpectrumBar
+                  key={code}
+                  label={dimensionLabel(code)}
+                  tScore={row?.tScore ?? null}
+                  percentile={tToPercentile(row?.tScore ?? null)}
+                  ci={row?.ci ?? null}
+                  color={main?.signature.color ?? "#7E57C2"}
+                />
+              );
+            })}
+          </div>
           <p className="text-xs text-slate-500">
-            T-점수 평균 50, SD 10 기준. 옅은 음영은 신뢰구간을, 진한 도형은 추정 위치를 의미합니다.
+            T-점수 평균 50, SD 10 기준. 옅은 음영은 신뢰구간(±SEM)을, 점은 추정 위치를 의미합니다.
+            백분위는 동일 연령 일반 분포 가정 기준으로 환산된 값이에요.
           </p>
           <AuxiliaryNotes
             auxiliary={(result.auxiliary as { code: "V" | "G"; raw: number | null }[]) ?? []}
@@ -129,6 +150,7 @@ function buildSections(result: ResultDto): SectionEntry[] {
                   ci: row.ci,
                 })
               : null;
+            const pct = tToPercentile(row?.tScore ?? null);
             return (
               <li key={code} className="rounded-xl border border-slate-100 bg-white p-4">
                 <div className="flex items-baseline justify-between gap-3">
@@ -136,6 +158,11 @@ function buildSections(result: ResultDto): SectionEntry[] {
                   <span className="text-xs text-slate-500">
                     T = {row?.tScore ?? "—"}
                     {row?.ci ? ` (${row.ci.low}~${row.ci.high})` : ""}
+                    {pct !== null ? (
+                      <span className="ml-1.5 font-medium text-slate-700">
+                        · {pct >= 50 ? `상위 ${100 - pct}%` : `하위 ${pct}%`}
+                      </span>
+                    ) : null}
                   </span>
                 </div>
                 {narrative ? (

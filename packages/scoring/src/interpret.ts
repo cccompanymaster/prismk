@@ -211,3 +211,40 @@ export function interpretRelationshipHint(
       .slice(0, 3),
   };
 }
+
+/**
+ * Abramowitz & Stegun 7.1.26 approximation of erf — accurate to ~1.5e-7 for
+ * |x| < 3.5, which is the entire range we ever hit (T-scores capped at 80
+ * give |Z| ≤ 3.0).
+ */
+function erf(x: number): number {
+  const sign = Math.sign(x);
+  const ax = Math.abs(x);
+  const a1 = 0.254829592;
+  const a2 = -0.284496736;
+  const a3 = 1.421413741;
+  const a4 = -1.453152027;
+  const a5 = 1.061405429;
+  const p = 0.3275911;
+  const t = 1 / (1 + p * ax);
+  const y = 1 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-ax * ax);
+  return sign * y;
+}
+
+/**
+ * Convert a T-score (mean 50, SD 10) to a 0-100 percentile rank against the
+ * assumed normal reference distribution.
+ *   T=50 → 50th, T=60 → 84th, T=65 → 93rd, T=70 → 98th, T=40 → 16th.
+ */
+export function tToPercentile(tScore: number | null): number | null {
+  if (tScore === null || Number.isNaN(tScore)) return null;
+  const z = (tScore - 50) / 10;
+  const cdf = 0.5 * (1 + erf(z / Math.SQRT2));
+  return Math.max(0, Math.min(100, Math.round(cdf * 100)));
+}
+
+export function percentileLabel(percentile: number | null): string | null {
+  if (percentile === null) return null;
+  if (percentile >= 50) return `상위 ${100 - percentile}%`;
+  return `하위 ${percentile}%`;
+}

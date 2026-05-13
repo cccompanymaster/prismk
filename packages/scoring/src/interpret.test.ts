@@ -12,7 +12,9 @@ import {
   interpretRelationshipHint,
   interpretStrengths,
   interpretStress,
+  percentileLabel,
   tScoreBand,
+  tToPercentile,
 } from "./interpret.js";
 
 function dim(t: number | null): DimensionScore {
@@ -135,5 +137,37 @@ describe("interpretRelationshipHint", () => {
     const main = findPattern("DI")!;
     const hint = interpretRelationshipHint(main, relationships);
     expect(hint.pairs.length).toBeLessThanOrEqual(3);
+  });
+});
+
+describe("tToPercentile / percentileLabel", () => {
+  it("maps T 50 to ~50th percentile", () => {
+    expect(tToPercentile(50)).toBe(50);
+  });
+
+  it("maps T 60 to ~84th percentile", () => {
+    expect(tToPercentile(60)).toBeGreaterThanOrEqual(83);
+    expect(tToPercentile(60)).toBeLessThanOrEqual(85);
+  });
+
+  it("maps T 40 to ~16th percentile (symmetric)", () => {
+    expect(tToPercentile(40)).toBeGreaterThanOrEqual(15);
+    expect(tToPercentile(40)).toBeLessThanOrEqual(17);
+  });
+
+  it("clamps and handles null", () => {
+    expect(tToPercentile(null)).toBeNull();
+    expect(tToPercentile(20)).toBeGreaterThanOrEqual(0);
+    expect(tToPercentile(80)).toBeLessThanOrEqual(100);
+  });
+
+  it("percentileLabel returns 상위 N% for high percentiles", () => {
+    expect(percentileLabel(84)).toBe("상위 16%");
+    expect(percentileLabel(50)).toBe("상위 50%");
+  });
+
+  it("percentileLabel returns 하위 N% for low percentiles", () => {
+    expect(percentileLabel(16)).toBe("하위 16%");
+    expect(percentileLabel(null)).toBeNull();
   });
 });
