@@ -25,6 +25,7 @@ import { RiskSignalBanner } from "@/components/result/RiskSignalBanner";
 import { SectionAccordion, type SectionEntry } from "@/components/result/SectionAccordion";
 import { ShareButtons } from "@/components/result/ShareButtons";
 import { SpectrumBar } from "@/components/result/SpectrumBar";
+import { SummaryCard } from "@/components/result/SummaryCard";
 
 export const dynamic = "force-dynamic";
 
@@ -368,9 +369,38 @@ export default async function ResultPage({ params }: { params: { token: string }
       )
     : null;
 
+  const facetsList = (result.facets as { facet: string; tScore: number | null }[]) ?? [];
+  const topStrengths = facetsList
+    .filter((f): f is { facet: string; tScore: number } => f.tScore !== null)
+    .sort((a, b) => b.tScore - a.tScore)
+    .slice(0, 3);
+
+  const STRESS_LABEL: Record<string, string> = {
+    S1: "예민함",
+    S2: "회피",
+    S3: "자기비난",
+    S4: "통제·완벽주의 강화",
+    S5: "신체화",
+  };
+  const dominantStressCode = (
+    (result.stressPatterns as { code: string; dominant: boolean }[]) ?? []
+  ).find((s) => s.dominant)?.code;
+  const dominantStress = dominantStressCode
+    ? `${dominantStressCode} · ${STRESS_LABEL[dominantStressCode] ?? dominantStressCode}`
+    : null;
+
   return (
     <>
       <ResultHero result={result} />
+      <SummaryCard
+        displayCode={result.code.display}
+        mainName={result.patterns.main?.name ?? result.code.main}
+        subName={result.patterns.sub?.name ?? null}
+        shortSlogan={result.patterns.main?.slogan ?? ""}
+        accent={result.patterns.main?.signature.color ?? "#7E57C2"}
+        topStrengths={topStrengths}
+        dominantStress={dominantStress}
+      />
       <QualityBanner
         quality={
           (result.quality as {
