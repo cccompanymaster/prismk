@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import {
   dimensions as DIMENSIONS_META,
   findPattern,
+  getPatternExtras,
   relationships,
   resultReportSections,
 } from "@prism-k/data";
@@ -301,11 +302,25 @@ function buildSections(result: ResultDto): SectionEntry[] {
         if (!mainPattern) return <p>메인 패턴을 확인할 수 없습니다.</p>;
         const careerText = interpretCareerFit(mainPattern, subPattern ?? null);
         const hint = interpretRelationshipHint(mainPattern, relationships);
+        const extras = getPatternExtras(mainPattern.id);
         return (
           <div className="space-y-4">
             <div className="rounded-xl border border-slate-100 bg-white p-4">
               <p className="text-xs uppercase tracking-wide text-slate-500">진로 적합성</p>
               <p className="mt-2 text-sm leading-relaxed text-slate-700">{careerText}</p>
+              <ul className="mt-3 flex flex-wrap gap-1.5">
+                {extras.careers.map((c) => (
+                  <li
+                    key={c}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-700"
+                  >
+                    {c}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-2 text-[11px] text-slate-500">
+                예시이며, 다른 영역의 가능성을 제한하지 않습니다.
+              </p>
             </div>
             {hint.pairs.length > 0 ? (
               <div className="rounded-xl border border-slate-100 bg-white p-4">

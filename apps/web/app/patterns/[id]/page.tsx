@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ArrowLeft,
+  Briefcase,
+  CalendarCheck,
   Heart,
   Lightbulb,
   MessageCircle,
@@ -11,7 +13,13 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { findPattern, patterns, relationships, type PatternId } from "@prism-k/data";
+import {
+  findPattern,
+  getPatternExtras,
+  patterns,
+  relationships,
+  type PatternId,
+} from "@prism-k/data";
 import { Card, CardBody } from "@/components/ui/Card";
 import { Container } from "@/components/ui/Container";
 
@@ -163,6 +171,61 @@ export default function PatternDetailPage({ params }: { params: { id: string } }
             {p.reframe}
           </p>
         </Section>
+
+        {(() => {
+          const extras = getPatternExtras(p.id);
+          return (
+            <>
+              <Section title="잘 어울리는 직무 예시" Icon={Briefcase} accent={accent}>
+                <ul className="flex flex-wrap gap-2">
+                  {extras.careers.map((c) => (
+                    <li
+                      key={c}
+                      className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700"
+                    >
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-3 text-xs text-slate-500">
+                  나열된 직무는 강점이 자연스럽게 발휘되기 쉬운 환경의 예시이며, 다른 영역에서의
+                  성공 가능성을 제한하지 않습니다.
+                </p>
+              </Section>
+
+              <Section title="커뮤니케이션 스타일" Icon={MessageCircle} accent={accent}>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      자연스러운 표현 방식
+                    </p>
+                    <p className="mt-1.5">{extras.communication.natural}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      상대에게서 필요한 것
+                    </p>
+                    <p className="mt-1.5">{extras.communication.needsFromOthers}</p>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="이번 달 시도해 볼 일상 루틴" Icon={CalendarCheck} accent={accent}>
+                <ul className="space-y-1.5">
+                  {extras.daily.map((d) => (
+                    <li key={d} className="flex items-start gap-2">
+                      <span
+                        className="mt-1.5 inline-block h-1.5 w-1.5 flex-shrink-0 rounded-full"
+                        style={{ backgroundColor: accent }}
+                      />
+                      <span>{d}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Section>
+            </>
+          );
+        })()}
 
         {(() => {
           const fixtures = relationships.filter((r) => r.pair.includes(p.id));
