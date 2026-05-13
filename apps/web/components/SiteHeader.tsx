@@ -8,7 +8,10 @@ const LINKS = [
 
 export function SiteHeader(): JSX.Element {
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur">
+    <header
+      role="banner"
+      className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/80 backdrop-blur print:hidden"
+    >
       <Container size="full">
         <div className="flex h-14 items-center justify-between">
           <Link

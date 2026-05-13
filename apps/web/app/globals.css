@@ -77,4 +77,48 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* Print: optimize the /result page for paper output. */
+  @media print {
+    @page {
+      margin: 14mm 12mm;
+    }
+    html,
+    body {
+      background: white !important;
+    }
+    /* Hide chrome that doesn't translate to paper. */
+    header[role="banner"],
+    footer,
+    nav,
+    [data-print="hide"] {
+      display: none !important;
+    }
+    /* Force everything to fit the page width. */
+    main {
+      padding: 0 !important;
+    }
+    /* Expand collapsed accordion content so the printed report
+       shows every section in full. */
+    [aria-expanded] + div[style*="height: 0"] {
+      height: auto !important;
+      opacity: 1 !important;
+    }
+    [data-print="expand"] {
+      display: block !important;
+    }
+    /* Avoid awkward page breaks inside result section cards. */
+    section,
+    article,
+    li,
+    aside {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    /* Strip drop shadows and gradients that print poorly. */
+    .shadow-soft,
+    .shadow-soft-lg {
+      box-shadow: none !important;
+    }
+  }
 }

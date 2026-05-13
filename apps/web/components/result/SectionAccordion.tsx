@@ -64,6 +64,13 @@ export function SectionAccordion({ sections }: { sections: SectionEntry[] }): JS
                 </motion.div>
               ) : null}
             </AnimatePresence>
+            {/* Print-only mirror: expanded content always visible on paper. */}
+            <div
+              className="hidden print:block border-t border-slate-100 bg-white px-5 py-5 text-sm leading-relaxed text-slate-700"
+              data-print="expand"
+            >
+              {section.body}
+            </div>
           </li>
         );
       })}

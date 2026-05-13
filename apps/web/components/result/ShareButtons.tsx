@@ -1,6 +1,6 @@
 "use client";
 
-import { Copy, Download, Image as ImageIcon, Link as LinkIcon, MessageCircle, Twitter } from "lucide-react";
+import { Copy, Download, Image as ImageIcon, Link as LinkIcon, MessageCircle, Printer, Twitter } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody } from "@/components/ui/Card";
@@ -53,7 +53,7 @@ export function ShareButtons({ token, displayCode }: Props): JSX.Element {
   const cardBase = `/api/cards/${encodeURIComponent(token)}`;
 
   return (
-    <section className="mx-auto mt-12 max-w-3xl px-4">
+    <section className="mx-auto mt-12 max-w-3xl px-4" data-print="hide">
       <h2 className="text-center text-base font-semibold text-slate-900">결과 공유하기</h2>
 
       <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
@@ -74,6 +74,14 @@ export function ShareButtons({ token, displayCode }: Props): JSX.Element {
         </Button>
         <Button variant="ghost" onClick={() => setInstaTipOpen((v) => !v)}>
           <ImageIcon className="h-4 w-4" /> 인스타그램 안내
+        </Button>
+        <Button
+          variant="ghost"
+          onClick={() => {
+            if (typeof window !== "undefined") window.print();
+          }}
+        >
+          <Printer className="h-4 w-4" /> 결과 인쇄 / PDF 저장
         </Button>
       </div>
 
