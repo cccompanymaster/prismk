@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>구슬 룰렛 — 사진으로 뽑는 랜덤 추첨</title>
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body>
+    <aside id="sidebar">
+      <h1>🎱 구슬 룰렛</h1>
+      <p class="hint">
+        참가자 이름을 줄바꿈 또는 쉼표로 구분해 입력하세요.<br />
+        <code>이름*3</code> 처럼 쓰면 구슬이 3개 생겨 확률이 올라갑니다.
+      </p>
+      <textarea
+        id="names-input"
+        rows="6"
+        placeholder="철수&#10;영희*2&#10;민수, 지연"
+      ></textarea>
+      <button id="apply-btn" class="btn btn-secondary">참가자 적용</button>
+
+      <div id="participants"></div>
+
+      <div class="row">
+        <label for="winner-mode">당첨 기준</label>
+        <select id="winner-mode">
+          <option value="first">1등이 당첨</option>
+          <option value="last">꼴찌가 당첨</option>
+        </select>
+      </div>
+
+      <div class="actions">
+        <button id="start-btn" class="btn btn-primary" disabled>시작!</button>
+        <button id="reset-btn" class="btn btn-secondary" disabled>리셋</button>
+      </div>
+
+      <p class="footnote">
+        사진을 올리면 구슬에 얼굴이 표시됩니다. 이미지는 브라우저 안에서만 사용되며
+        서버로 전송되지 않습니다.
+      </p>
+    </aside>
+
+    <main id="stage">
+      <canvas id="game-canvas"></canvas>
+      <div id="winner-overlay" class="hidden">
+        <div class="winner-card">
+          <p class="winner-label">🎉 당첨 🎉</p>
+          <div id="winner-image"></div>
+          <p id="winner-name"></p>
+          <button id="again-btn" class="btn btn-primary">다시 하기</button>
+        </div>
+      </div>
+    </main>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
